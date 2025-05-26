@@ -1,0 +1,1154 @@
+This file has been provided to aid in copy and paste of iRules code. Below are all the Proposed Solutions iRules proivded in the iRules Lab Manual in the Instructions tab.
+If you encounter issues with keyboard commands Ctrl+C and Ctrl+V to copy and paste, use the cursor right-click menu to perform the copy and paste commands.
+
+---------------------------------------------
+iRules-C1-SA05: Lab: Configure a Simple iRule
+
+header_iRule
+
+The code block below provides an example of one solution for the Log HTTP Header Data lab.
+
+Note: Use caution not to include line breaks when writing the iRule or using copy & paste.
+
+when HTTP_REQUEST {
+   log local0. "URL requested is [HTTP::host][HTTP::uri]; HTTP method is [HTTP::method]; HTTP Accept-Encoding header is [HTTP::header Accept-Encoding]"
+}​
+
+-----------------------------------------------------------------
+iRules-C1-SB05: Lab: Observe Connection Flow and Context
+
+Your initial connection to http://lab3.f5trn.com/env.cgi will fail if you do not assign a default pool (P1-3) to virtual server VS203 in the virtual server's configuration. (It is deliberately misconfigured to give you an opportunity to flex your problem diagnosis skills.) As an alternative, you could select the pool in the iRule using the pool command at the CLIENT_ACCEPTED event.
+
+A possible solution for the full lab is shown below:
+
+when CLIENT_ACCEPTED {
+  log local0. "Client‑side connection opened | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when LB_SELECTED {
+  log local0. "Load balancing decision made.Pool member selected is [LB::server addr]:[LB::server port] | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when SERVER_CONNECTED {
+  log local0. "Server‑side connection opened | CLIENT: [IP::local_addr]:[TCP::local_port] | SERVER: [IP::remote_addr]:[TCP::remote_port]"
+}
+when SERVER_CLOSED {
+  log local0. "Server‑side connection closed | CLIENT: [IP::local_addr]:[TCP::local_port] | SERVER: [IP::remote_addr]:[TCP::remote_port]"
+}
+when CLIENT_CLOSED {
+  log local0. "Client‑side connection closed | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when HTTP_REQUEST {
+  log local0. "Client HTTP request received | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when HTTP_RESPONSE {
+  log local0. "Server HTTP response received | CLIENT: [IP::local_addr]:[TCP::local_port] | SERVER: [IP::remote_addr]:[TCP::remote_port]"
+}​
+
+------------------------------------------------------------------------------
+iRules-C1-SB10: Lab: Work with Local Variables and Implement Conditional Logic
+
+Log HTTP Host and URI
+
+when HTTP_REQUEST {
+    set Host [HTTP::host]
+    set URI [HTTP::uri]
+    log local0. "Client request for http://$Host$URI"
+}​
+
+Add HTTP method
+
+when HTTP_REQUEST {
+    set Host [HTTP::host]
+    set URI [HTTP::uri]
+    log local0. "Client [HTTP::method] request for http://$Host$URI"
+}​
+
+Log HTTP Status Code on Server Response
+
+when HTTP_REQUEST {
+    set Host [HTTP::host]
+    set URI [HTTP::uri]
+    log local0. "Client request for http://$Host$URI"
+}
+when HTTP_RESPONSE {
+    log local0. "Server response is [HTTP::status]"
+}
+​
+
+Add the HTTP method, host name, and complete URI
+
+when HTTP_REQUEST {  set ClientReq "[HTTP::method] request for http://[HTTP::host][HTTP::uri]"
+   log local0. "Client [HTTP::method] request for http://[HTTP::host][HTTP::uri]"
+}
+when HTTP_RESPONSE {
+   log local0. "Server response to $ClientReq is [HTTP::status]"
+}
+​
+
+Conditionally write HTTP request and response event log messages
+
+There are several approaches you might take to write the request and response log messages only if the HTTP request is for the default page (http://lab3.f5trn.com). Here's a simple approach that checks to see if the HTTP URI is just a single slash (/). You could check to see if URI length is equal to 1:
+
+when HTTP_REQUEST {
+    if { [HTTP::uri] == "/" } {
+    # if the request is for the default page, log it and set the response prompt
+        set ClientReq "[HTTP::method] request for http://[HTTP::host][HTTP::uri]"
+        log local0. "Client [HTTP::method] request for http://[HTTP::host][HTTP::uri]"
+    } else {
+    # ...otherwise, set response prompt but don't log
+        set ClientReq ""
+    }
+}
+when HTTP_RESPONSE {
+    # if the request was for the default page, log the response prompt and status
+    if { $ClientReq != "" } {
+        log local0. "Server response to $ClientReq is [HTTP::status]"
+    }
+}
+​
+A little exploration on DevCentral might yield the info exists command which can be used to test for the existence of a variable, in this case ClientReq:
+
+when HTTP_REQUEST {   if { [HTTP::uri] == "/" } {       set ClientReq "[HTTP::method] request for http://[HTTP::host][HTTP::uri]"       log local0. "Client [HTTP::method] request for http://[HTTP::host][HTTP::uri]"   }
+}
+when HTTP_RESPONSE {   if { [info exists ClientReq] } {
+        log local0. "Server response to $ClientReq is [HTTP::status]"   }
+}
+​
+
+The most efficient approach might be to use event disable to completely bypass the HTTP_RESPONSE event if the HTTP request is for something other than the default page. With this method, there is no need to check for the existence or value of ClientReq in the HTTP_RESPONSE event.
+
+when HTTP_REQUEST {
+    if { [HTTP::uri] == "/" } { 
+       set ClientReq "[HTTP::method] request for http://[HTTP::host][HTTP::uri]"
+        log local0. "Client [HTTP::method] request for http://[HTTP::host][HTTP::uri]"
+    } else {
+        event HTTP_RESPONSE disable
+    }
+}
+when HTTP_RESPONSE {
+    log local0. "Server response to $ClientReq is [HTTP::status]"
+}
+​
+
+Use an IF control structure to conditionally log messages
+
+when HTTP_REQUEST {
+    if { [URI::query [HTTP::uri] user] equals "abc" } {
+        log local0. "ABC Company employee connecting"
+    } elseif { [URI::query [HTTP::uri] user] equals "xyz" } {
+        log local0. "XYZ Corporation user connecting"
+    } elseif { [URI::query [HTTP::uri] user] equals "123" } {
+        log local0. "123 Business account connecting"
+    } elseif { [URI::query [HTTP::uri] user] equals "" } {
+        log local0. "No user parameter specified"
+    } else {
+        log local0. "Connection from unknown user"
+    }
+}
+​
+
+Convert the IF structure to SWITCH
+
+when HTTP_REQUEST {
+    switch [URI::query [HTTP::uri] user] {
+        "abc"   { log local0. "ABC Company employee connecting" }
+        "xyz"   { log local0. "XYZ Corporation user connecting" }
+        "123"   { log local0. "123 Business account connecting" }
+        ""      { log local0. "No user parameter specified" } 
+       default { log local0. "Connection from unknown user" }
+    }
+}
+​
+
+Additional Checks and Controls: Avoid all conditional checks if there is no query string provided
+
+when HTTP_REQUEST {
+    if { [string length [HTTP::query]] > 0 } {
+        switch [URI::query [HTTP::uri] user] {
+            "abc"   { log local0. "ABC Company employee connecting" }
+            "xyz"   { log local0. "XYZ Corporation user connecting" }
+            "123"   { log local0. "123 Business account connecting" }
+            ""      { log local0. "No user parameter specified" }
+            default { log local0. "Connection from unknown user" }
+        }
+    }
+}​
+
+Additional Checks and Controls: Make the check case insensitive.
+
+when HTTP_REQUEST {
+    if { [string length [HTTP::query]] > 0 } {
+        switch [string tolower [URI::query [HTTP::uri] user]] {
+            "abc"   { log local0. "ABC Company employee connecting" }
+            "xyz"   { log local0. "XYZ Corporation user connecting" }
+            "123"   { log local0. "123 Business account connecting" }
+            ""      { log local0. "No user parameter specified" }
+            default { log local0. "Connection from unknown user" }
+        }
+    }
+}
+​
+
+Additional Checks and Controls: Produce or suppress all log messages.
+
+when CLIENT_ACCEPTED {
+   # To produce log messages, set debug to true;
+   # To suppress log messages, set debug to false
+   set debug true
+}
+when HTTP_REQUEST {
+   if { [string length [HTTP::query]] > 0 } {
+      switch [string tolower [URI::query [HTTP::uri] user]] {
+         "abc"   { if { $debug } { log local0. "ABC Company employee connecting" } }
+         "xyz"   { if { $debug } { log local0. "XYZ Corporation user connecting" } }
+         "123"   { if { $debug } { log local0. "123 Business account connecting" } }
+         ""      { if { $debug } { log local0. "No user parameter specified" } }
+         default { if { $debug } { log local0. "Connection from unknown user" } }
+      }
+   }
+}
+
+------------------------------------------------------------------
+iRules-C1-SC04: Lab: Implement Intelligent Load Balancing and SNAT
+
+Use “IF” to select pool and SNAT based on HTTP host header
+
+# This iRule does several things: It forces HTTP requests for the default page
+# (as indicated by a URI with only the '/' character in it) to use lab4.html
+# instead. It serves four websites through the same virtual server by selecting
+# the appropriate load balancing pool based on the contents of the HTTP host
+# header. It also selects the appropriate source address translation method
+# (SNAT) based on the HTTP host header. Any request for a host name other than
+# www.fast.lab, web.secure.lab, and available.lab (such as lab4.f5trn.com) is 
+# directed to pool P4 and SNATed using an IP address in SNAT pool SP151.
+#
+# In this example, an IF statement is used to perform main conditional logic.
+when HTTP_REQUEST {
+    # Force requests to lab4.html if original request is for default website page
+    if { [HTTP::uri] equals "/" } {
+        HTTP::uri "/lab4.html"
+    }
+    # www.fast.lab requests use snat pool SP150, and get content from pool P1
+    if { [HTTP::host] equals "www.fast.lab" } {
+        snatpool SP150
+        pool P1
+    # web.secure.lab requests use snat automap, and get content from pool P2
+    } elseif { [HTTP::host] equals "web.secure.lab" } {
+        snat automap
+        pool P2
+    # available.lab requests use 172.16.1.31 for SNAT, and get content from pool P3
+    } elseif { [HTTP::host] equals "available.lab" } {
+        snat 172.16.1.31
+        pool P3
+    # lab4.f5trn.com and all other requests use snat pool SP151, and get content
+    # from pool p4
+    } else {
+        snatpool SP151
+        pool P4
+    }
+}​
+
+While this solution is good - especially since it includes comments - it doesn’t handle the possibility that the user might have included the port on the host name. For example, if the user entered www.fast.lab:80 and the browser passed the port in the host header, the equals comparison for host name www.fast.lab will fail, as will all other tests except the last else. Instead of getting the content for www.fast.lab, the user will wind up with the content for lab4.f5trn.com.
+
+To allow for this possibility, you could use the iRules substr function to set a variable to the host name portion of the HTTP host header, and then compare that variable rather than [HTTP::host]. For example:
+
+set hostname [substr [HTTP::host] 0 ":"]
+if { $hostname equals "www.fast.lab" } { ...
+​
+
+Use “switch” to select pool and SNAT based on HTTP host header
+
+# This iRule does several things: It forces HTTP requests for the default page
+# (as indicated by a URI with only the '/' character in it) to use lab4.html
+# instead. It serves four websites through the same virtual server by selecting
+# the appropriate load balancing pool based on the contents of the HTTP host
+# header. It also selects the appropriate source address translation method
+# (SNAT) based on the HTTP host header. Any request for a host name other than
+# www.fast.lab, web.secure.lab, and available.lab (such as lab4.f5trn.com) is 
+# directed to pool P4 and SNATed using an IP address in SNAT pool SP151.
+#
+# In order to allow for the possibility that the user enters a port along with
+# the host name (e.g. www.fast.lab:80), the iRule extracts just the host name
+# portion of the HTTP host header, eliminating any port, if specified.
+#
+# In this example, an IF statement is used to perform main conditional logic.
+#
+when HTTP_REQUEST {
+    # Force requests to lab4.html if original request is for default website page
+    if { [HTTP::uri] equals "/" } {
+        HTTP::uri "/lab4.html"
+    }
+    # www.fast.lab requests use snat pool SP150, content from pool P1
+    # web.secure.lab requests use snat automap, content from pool P2
+    # available.lab requests use 172.16.4.31 for SNAT, content from pool P3
+    # lab4.f5trn.com and all other requests use snat pool SP151, content
+    # from pool p4
+    switch [substr [HTTP::host] 0 ":"] {
+        "www.fast.lab" {
+            snatpool SP150
+            pool P1
+        }
+       "web.secure.lab" {
+            snat automap
+            pool P2
+        }
+        "available.lab" {
+            snat 172.16.1.31
+            pool P3
+        }
+        default {
+            snatpool SP151
+            pool P4
+        }
+    }
+}​
+
+Log Client-Side Connection Info and Select Pool
+
+You can correct the iRule in a number of different ways, including the following solution, which addresses the lack of comments:
+
+# This iRule selects load balancing pool P1‑3 for client connections that
+# include an HTTP request. When being tested, it logs a message to /var/log/ltm
+# that includes the client's IP address, the address of the virtual server
+# they connected to, and the contents of the HTTP host header and the URI
+# requested. For production, comment out the log command.
+when HTTP_REQUEST {
+    # Comment out the log statement below for production
+    log local0. "Client [IP::client_addr] connected to virtual server [IP::local_addr] and requested [HTTP::host][HTTP::uri]"
+    # Load balance using pool P1-3
+    pool P1-3
+}​
+
+-----------------------------------------------------
+iRules-C1-SD02: Lab: Measure IF and SWITCH Efficiency
+
+Use separate if statements to select pool
+
+when HTTP_REQUEST {
+    if { [URI::query [HTTP::uri] Pool] eq 1 } { pool P1 }
+    if { [URI::query [HTTP::uri] Pool] eq 2 } { pool P2 }
+    if { [URI::query [HTTP::uri] Pool] eq 3 } { pool P3 }
+}
+​
+
+Use if-elseif structure to select pool
+
+when HTTP_REQUEST {
+    if     { [URI::query [HTTP::uri] Pool] eq 1 } { pool P1 }
+    elseif { [URI::query [HTTP::uri] Pool] eq 2 } { pool P2 }
+    elseif { [URI::query [HTTP::uri] Pool] eq 3 } { pool P3 }
+}​
+
+You might have noticed that query parameter is only included on the first GET request for the default page of the blue application. Subsequent GET requests for page elements (and there are many) such as JPGs and PNGs, have no query string on them. Before checking the Pool parameter, you could test to see if it even has a value. This could save up to two conditional tests per invocation of the iRule for all but the initial GET that has the query parameter on it.
+
+when HTTP_REQUEST timing on {
+    if { [URI::query [HTTP::uri] Pool] ne "" } {
+        if     { [URI::query [HTTP::uri] Pool] eq 1 } { pool P1 }
+        elseif { [URI::query [HTTP::uri] Pool] eq 2 } { pool P2 }
+        elseif { [URI::query [HTTP::uri] Pool] eq 3 } { pool P3 }
+    }
+}
+​
+
+Use switch structure to select pool
+
+when HTTP_REQUEST {
+    if { [URI::query [HTTP::uri] Pool] ne "" } {
+        switch [URI::query [HTTP::uri] Pool] {
+            1 { pool P1 }
+            2 { pool P2 }
+            3 { pool P3 }
+        }
+    }
+}​
+
+--------------------------------------------------------
+iRules-C1-SD05: Lab: Manage Duplicate Events in an iRule
+
+Conditionally disable SNAT for specific client IP
+
+when CLIENT_ACCEPTED {
+    if { [IP::client_addr] == "10.10.1.30" } {
+        snat none
+        log local0. "SNAT disabled for this connection "
+    }
+}​
+
+
+Unconditionally apply SNAT auto map
+
+when CLIENT_ACCEPTED {
+    snat automap
+    log local0. "SNAT automap applied to this connection "
+}
+​
+
+Test priority behavior
+
+disable_SNAT iRule
+
+when CLIENT_ACCEPTED priority 100 {
+    if { [IP::client_addr] == "10.10.1.30" } {
+        snat none
+        log local0. "SNAT disabled for this connection "
+    }
+}​
+
+apply_SNAT iRule
+
+when CLIENT_ACCEPTED priority 1 {
+    snat automap
+    log local0. "SNAT automap applied to this connection "
+}
+​
+
+Test event disable behavior
+
+disable_SNAT iRule
+
+when CLIENT_ACCEPTED priority 100 {
+    if { [IP::client_addr] == "10.10.1.30" } {
+        snat none
+        log local0. "SNAT disabled for this connection "
+        event disable
+    }
+}​
+
+apply_SNAT iRule
+
+when CLIENT_ACCEPTED priority 1 {
+    snat automap
+    log local0. "SNAT automap applied to this connection "
+}
+​
+
+Rewrite iRule to make maintenance easier
+
+Unless there is a specific need to have two separate iRules, a single iRule is usually the best way to go.
+
+when CLIENT_ACCEPTED {
+    if { [IP::client_addr] == "10.10.X.30" } {
+        snat none
+        log local0. "SNAT disabled for this connection"
+     } else {
+        snat automap
+        log local0. "SNAT automap applied to this connection"
+    }
+}
+
+----------------------------------------------------------------------
+iRules-C1-SD09: Lab: Measure iRule Efficiency When Logging and Looping
+
+Measure Logging Efficiency Using SYSLOG-NG
+
+when CLIENT_ACCEPTED {
+  log local0. "Client‑side connection opened | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when LB_SELECTED {
+  log local0. " Client connection load balanced to pool member [LB::server addr]:[LB::server port] | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when SERVER_CONNECTED {
+  log local0. "Server‑side connection opened | CLIENT: [IP::local_addr]:[TCP::local_port] | SERVER: [IP::remote_addr]:[TCP::remote_port]"
+}
+when SERVER_CLOSED {  log local0. "Server‑side connection closed | CLIENT: [IP::local_addr]:[TCP::local_port] | SERVER: [IP::remote_addr]:[TCP::remote_port]"
+}
+when CLIENT_CLOSED {
+  log local0. "Client‑side connection closed | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when HTTP_REQUEST {
+  log local0. "Client HTTP request received on BIG‑IP | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when HTTP_RESPONSE {
+    log local0. "Server HTTP response received on BIG‑IP | CLIENT: [IP::local_addr]:[TCP::local_port] | SERVER: [IP::remote_addr]:[TCP::remote_port]"
+}​
+
+
+Measure Logging Efficiency Using HSL
+
+when CLIENT_ACCEPTED {
+    set hsl [HSL::open -publisher /Common/local-db-publisher]
+    HSL::send $hsl "<190> Client‑side connection opened | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when LB_SELECTED {
+    HSL::send $hsl "<190> Client connection load balanced to pool member [LB::server addr]:[LB::server port] | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when SERVER_CONNECTED {
+    HSL::send $hsl "<190> Server‑side connection opened | CLIENT: [IP::local_addr]:[TCP::local_port] | SERVER: [IP::remote_addr]:[TCP::remote_port]"
+}
+when SERVER_CLOSED {
+    HSL::send $hsl "<190> Server‑side connection closed | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when CLIENT_CLOSED {
+    HSL::send $hsl "<190> Client‑side connection closed | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when HTTP_REQUEST {
+    HSL::send $hsl "<190> Client HTTP request received on BIG‑IP | CLIENT: [IP::remote_addr]:[TCP::remote_port] | SERVER: [IP::local_addr]:[TCP::local_port]"
+}
+when HTTP_RESPONSE {
+    HSL::send $hsl "<190> Server HTTP response received on BIG‑IP | CLIENT: [IP::local_addr]:[TCP::local_port] | SERVER: [IP::remote_addr]:[TCP::remote_port]"
+}​
+
+
+Measure Looping Control Structure Efficiency
+
+Using FOREACH:
+
+when HTTP_RESPONSE {
+    foreach header_name [HTTP::header names] {
+        log local0. "$header_name: [HTTP::header value $header_name]"
+    }
+}
+​
+
+Using FOR:
+
+when HTTP_RESPONSE {
+    for {set i 0} {$i < [ expr {[HTTP::header count] ‑ 1}]} {incr i} {
+        log local0. "[HTTP::header at $i]: [HTTP::header value [HTTP::header at $i]]"
+    }
+}
+​
+
+Using WHILE:
+
+when HTTP_RESPONSE {
+    set i 0
+    while {$i < [ expr {[HTTP::header count] ‑ 1}]} {
+        log local0. "[HTTP::header at $i]: [HTTP::header value [HTTP::header at $i]]"
+        incr i
+    }
+}​
+
+-------------------------------------------------------
+iRules-C1-SE03: Lab: Use an iRule to Parse Payload Data
+
+Parse Data
+
+when HTTP_REQUEST {
+  if { [HTTP::uri] contains "/olddir/" } {
+    set olduri [HTTP::uri]
+    HTTP::uri [string map { "/olddir/" "/" } [HTTP::uri]]
+    log local0. "Request changed from [HTTP::host]$olduri to [HTTP::host][HTTP::uri]"
+  }
+}
+​
+
+Note: This solution requires virtual server VS207 be configured with the default pool named P1-5. As an alternative, you could make the pool selection from within the iRule using the pool command.
+
+---------------------------------------------------------------------------------------
+iRules-C1-SE06: Lab: Use String Parsing Commands to Extract Criteria for Load Balancing
+
+Load balance based on a portion of client IP address
+
+As with any iRule, there are many ways the lab specifications could have been accommodated. A conventional (and completely acceptable) approach would parse the fourth octet of the client's IP address.
+
+Here is a possible solution that uses the getfield command. You might have chosen to use a different command such as scan or string:
+
+when CLIENT_ACCEPTED {
+    # If client is in the 10.10.1/24 network...
+    if { [IP::addr [IP::client_addr] equals 10.10.1.0/24] } {
+        # Use the fourth octet in the client's IPv4 address to select the pool
+        # Pool name is a combination of the letter "P" and the 4th octet
+        pool P[getfield [IP::client_addr] "." 4]
+        # To test without having to change your workstation's IP address:
+        #pool P[expr { [getfield [IP::client_addr] "." 4]‑29 }]
+    }
+}​
+
+The pool statement that is commented out provides a way to test your iRule without having to change your workstation’s IP address – at least for pool P1. (To test for a 2, 3, 4, or 5 in the fourth octet of the client's IP address, just subtract the appropriate number from the actual 4th octet - 28, 27, 26, or 25.)
+
+You might want to make certain the client’s IP address is in the proper range - 1 to 5 - before using it as part of the pool name. Also, since the specifications indicated there was to be no default pool configured on the virtual server, you might want to have an option that covers traffic from clients that are not in the proper range of 10.10.X.1 to 10.10.X.5.
+
+when CLIENT_ACCEPTED {
+    # If client is in the 10.10.1/24 network…
+    if { [IP::addr [IP::client_addr] equals 10.10.1.0/24] } {
+        # Use the fourth octet in the client's IPv4 address to select the pool
+        # Pool name is a combination of the letter "P" and the 4th octet,
+        # ranging from 1‑5
+        set client [getfield [IP::client_addr] "." 4]
+        # To test without having to change your workstation's IP address:
+        #set client [expr {[getfield [IP::client_addr] "." 4]‑29 }]
+        if { $client >= 1 && $client <= 5 } {
+            pool P$client
+        } else {
+            reject
+        }
+    } else {
+        reject
+    }
+}
+​
+
+You might have opted to use multiple getfield commands instead of a variable. You could time both methods to see which one is more efficient.
+
+
+Redirect Clients to Secure Website Regardless of Port Specified on HTTP Request
+
+The most important part of the solution is to ensure that any port specification on the original HTTP request is removed before issuing the HTTP redirect. In this solution, the GETFIELD command is used to do that. The RETURN command causes immediate exit from the HTTP_REQUEST event.
+
+when HTTP_REQUEST {
+    HTTP::redirect https://[getfield [HTTP::host] ":" 1][HTTP::uri]
+    return
+}​
+​
+------------------------------------------------------
+iRules-C1-SF04: Lab: Explore Using iRule HTTP Commands
+
+Selectively translate source address and insert X-Forwarded-For header
+
+For the solution below to work correctly, the virtual server listening at 10.10.1.208:80 must have Source Address Translation set to None.
+
+when HTTP_REQUEST {
+    if { [IP::client_addr] ne "10.10.1.28" } {
+        snat automap
+    }
+    if { ![HTTP::header exists "X-Forwarded-For"] } {
+        HTTP::header insert "X-Forwarded-For" [IP::client_addr]
+    }
+}​
+
+
+Solve the scenario without an iRule
+
+The lab scenario can be accomplished without an iRule using three virtual servers, each with the same destination IP address and port, but listening for traffic from a particular client IP address or address range. The Source setting, in conjunction with the Destination address and port, provides more granularity for a virtual server type listener:
+
+One virtual server configured with Source set to 10.10.1.28/32, no SNAT, and an HTTP profile that inserts the X-Forwarded-For header.
+
+A virtual server second configured with Source set to 10.10.1.0/24, with SNAT, and an HTTP profile that inserts the X-Forwarded-For header.
+
+A third virtual server configured with Source set to 10.10.0.0/16, with SNAT, and an HTTP profile that does not insert the X-Forwarded-For header
+
+You can use Local Traffic Statistics to confirm traffic is being directed to the appropriate virtual server based on client IP address.
+
+
+Apply selective compression
+
+For your iRule to work, you must add an HTTP compression type profile to the virtual server with the Selective Compression setting enabled (checked).
+Program Codewhen HTTP_REQUEST {
+    if { [IP::client_addr] ne "10.10.1.28" } {
+        snat automap
+    }
+    if { ![HTTP::header exists "X-Forwarded-For"] } {
+        # Client did not include an XFF header, so we insert one for them
+        HTTP::header insert "X-Forwarded-For" [IP::client_addr]
+        # If no XFF header, client must be in Client Group 1 or 2.
+        # Disable compression offload to allow server to send compressed response.
+        COMPRESS::disable
+    } else {
+        # If XFF header is present, client must in Client Group 3.
+        # Enable compression offload to prevent server sending compressed response.
+        COMPRESS::enable
+    }
+}​
+
+----------------------------------------
+iRules-C1-SG03: Lab: Secure HTTP Traffic
+
+Secure HTTP Headers
+
+Here is one possible solution to the specifications described in the Secure HTTP Headers exercise of this lab.
+
+when HTTP_RESPONSE {
+    if {!([HTTP::header exists "X-Frame-Options"]) } {
+       HTTP::header insert "X-Frame-Options" "SAMEORIGIN"
+    }
+    if { !([HTTP::header exists "X-XSS-Protection"]) } {
+       HTTP::header insert "X-XSS-Protection" "1;mode=block"
+    }
+    if { !([HTTP::header exists "X-Content-Type-Options"]) } {
+       HTTP::header insert "X-Content-Type-Options" "nosniff"
+    }
+    HTTP::header remove "Server"
+    HTTP::header remove "X-Powered-By"
+}​
+
+Secure Application Cookies
+
+The iRule from the first exercise has been modified with additional code in bold.
+
+when HTTP_RESPONSE {
+    if {!([HTTP::header exists "X-Frame-Options"]) } {
+       HTTP::header insert "X-Frame-Options" "SAMEORIGIN"
+    }
+    if { !([HTTP::header exists "X-XSS-Protection"]) } {
+       HTTP::header insert "X-XSS-Protection" "1;mode=block"
+    }
+    if { !([HTTP::header exists "X-Content-Type-Options"]) } {
+       HTTP::header insert "X-Content-Type-Options" "nosniff"
+    }
+    HTTP::header remove "Server"
+    HTTP::header remove "X-Powered-By"
+    foreach thisCookie [HTTP::cookie names] {
+        HTTP::cookie httponly $thisCookie enable
+    }
+}​
+
+Secure the Entire Application
+
+For the iRule on the port 80 virtual server (VS206):
+
+when HTTP_REQUEST {
+    HTTP::redirect "https://[HTTP::host]/[HTTP::uri]"
+}​
+
+For the iRule on the port 443 virtual server (VS206SSL):
+
+when HTTP_RESPONSE {
+    if {!([HTTP::header exists "X-Frame-Options"]) } {
+       HTTP::header insert "X-Frame-Options" "SAMEORIGIN"
+    }
+    if {!([HTTP::header exists "X-XSS-Protection"]) } {
+       HTTP::header insert "X-XSS-Protection" "1;mode=block"
+    }
+    if { !([HTTP::header exists "X-Content-Type-Options"]) } {
+       HTTP::header insert "X-Content-Type-Options" "nosniff"
+    }
+    HTTP::header remove "Server"
+    HTTP::header remove "X-Powered-By"
+    foreach thisCookie [HTTP::cookie names] {
+        HTTP::cookie httponly $thisCookie enable
+    }
+}​
+
+---------------------------------------------------------------------
+iRules-C2-SA02: Lab: Explore Using iFiles to Share Data Across iRules
+
+Serve an HTTP response page from an iFile
+
+Again, there are many ways to solve this requirement. Here is one example:
+
+when HTTP_RESPONSE {
+    # serve an iFile when http status is 404.
+    if { [HTTP::status] == 404 } {
+        HTTP::respond 200 content [ifile get "sorry.html"]
+    }
+}​
+
+BIG-IP system information for iFile sorry.html
+
+/config/filestore/files_d/Common_d/ifile_d/:Common/sorry.html_74965_1
+
+ltm ifile sorry.html {
+    file‑name sorry.html
+}
+sys file ifile sorry.html {
+    checksum SHA1:166:b5e6d3db4cdbf6d4941327a212bb867416740046
+    create‑time 2017‑09‑06:15:55:49
+    created‑by admin
+    last‑update‑time 2017‑09‑06:15:55:49
+    mode 33188
+    revision 1
+    size 166
+    updated‑by admin
+}
+​
+
+Contents of sorry.html
+
+<html>
+<head>
+<title>My Custom Apology Page</title>
+</head>
+<body>
+<p>Oops! That page has moved or no longer exists.</p>
+</body>
+</html>​
+
+Serve a JPG from an iFile
+
+After importing sorry.jpg as an iFile and making it accessible to your iRule, you can serve it via the iRule whenever it is requested using the code that is highlighted below.
+
+when HTTP_REQUEST {
+    if { [HTTP::uri] contains "sorry.jpg" } {
+        HTTP::respond 200 content [ifile get "sorry.jpg"]
+    }
+}
+when HTTP_RESPONSE {
+    # serve an iFile when http status is 404.
+    if { [HTTP::status] == 404 } {
+        HTTP::respond 200 content [ifile get "sorry.html"]
+    }
+}​
+
+BIG-IP system information for iFile sorry.jpg
+
+/config/filestore/files_d/Common_d/ifile_d/:Common/sorry.jpg_81944_1
+
+ltm ifile sorry.jpg {
+    file‑name sorry.jpg
+}
+sys file ifile sorry.jpg {
+    checksum SHA1:14139:d939a09e7065a665c6331526be39ae248b168562
+    create‑time 2017‑09‑06:15:50:38
+    created‑by admin
+    last‑update‑time 2017‑09‑06:15:50:38
+    mode 33188
+    revision 1
+    size 14139
+    updated‑by admin
+}
+​
+
+Contents of sorry.html modified to incorporate sorry.jpg
+
+<html>
+<head>
+<title>My Custom Apology Page</title>
+</head>
+<body>
+<img src="sorry.jpg"><br clear="all" />
+<p>Oops! That page has moved or no longer exists.</p>
+</body>
+</html>​
+
+----------------------------------------
+iRules-C2-SB02: Lab: Explore Data Groups
+
+Modify the HTTP User Agent header
+
+You might first use a SWITCH command to solve the requirement without using a data group. If you went straight for the data group method, see the possible solution for exercise Solve the requirements using a data group below.
+
+when HTTP_REQUEST {
+  # Check the UA query parameter to see if its value is 1-4 (inclusive)
+  # Replace the User-Agent header if in range
+  switch [URI::query [HTTP::uri] ua] {
+    1 { HTTP::header replace "User-Agent" "Trident" }
+    2 { HTTP::header replace "User-Agent" "Firefox" }
+    3 { HTTP::header replace "User-Agent" "Chrome" }
+    4 { HTTP::header replace "User-Agent" "Safari" }
+  }
+}​
+
+Solve the requirements using a data group
+
+If you didn’t do so in exercise Modify the HTTP User Agent header, you could use either an internal or external data group to solve the requirement instead. The example below is an internal data group.
+
+when HTTP_REQUEST {
+  # Check to see if UA query parameter was specified with a value
+  if { [URI::query [HTTP::uri] ua] != "" } {
+    # UA parameter with value was specified so
+    # check to see if matches UserAgent data group key
+    if { [class match [URI::query [HTTP::uri] ua] equals UserAgent] } {
+        # UA parameter value matches UserAgent list so
+        # replace User‑Agent header with UserAgent data group value
+        HTTP::header replace "User-Agent" [class match -value [URI::query [HTTP::uri] ua] equals UserAgent]
+    }
+  }
+}​
+
+Internal Data Group
+
+ltm data‑group internal UserAgent {
+    records {
+        1 {
+            data Trident
+        }
+        2 {
+            data Firefox
+        }
+        3 {
+            data Chrome
+        }
+        4 {
+            data Safari
+        }
+}
+    type integer
+}​
+
+Remove UA parameter from query string
+
+There are many different ways to parse the “ua=n” query string and remove it from the URI. One possible solution is shown below.
+
+when HTTP_REQUEST {
+  # Save the current URI for later modification
+  set newURI [HTTP::uri]
+  # If a UA query parameter with a value was specified,
+  # see if it matches an entry in the UserAgent data group
+  if { [URI::query [HTTP::uri] ua] != "" } {
+    if { [class match [URI::query [HTTP::uri] ua] equals UserAgent] } {
+      # UA value specified matches. Replace User‑Agent header with value
+      HTTP::header replace "User-Agent" [class match -value [URI::query [HTTP::uri] ua] equals UserAgent]
+    }
+    # Remove the UA query parameter and its value from the saved URI
+    set newURI [string map [list "ua=[URI::query [HTTP::uri] ua]" ""] [HTTP::uri]]
+    # Clean up the URI, removing any UA parameter with no value
+    # and eliminating leftover parameter separators
+    set newURI [string map {"ua=" ""} $newURI]
+    set newURI [string map {"?&" "?"} $newURI]
+    set newURI [string map {"&&" "&"} $newURI]
+    set newURILen [expr {[string length $newURI]-1}]
+    # Remove any trailing ampersand (&) or question mark (?) from the modified URI
+    if { [string range $newURI $newURILen end] equals "&" || [string range $newURI $newURILen end] equals "?" } {
+      set newURI [substr $newURI 0 $newURILen]
+    }
+    # Log the modified URI and then replace it in the payload
+    log local0. $newURI
+    HTTP::uri $newURI
+  }
+}​
+
+-----------------------------------------------------------------------------
+iRules-C2-SC02: Lab: Intelligently Deploy Universal Persistence with an iRule
+
+Note that there is a space between “user=”, the number 5, and the “&” in the iRule below.
+
+when HTTP_REQUEST {
+   if { [HTTP::uri] contains "user=" } {
+       persist uie [ findstr [HTTP::uri] "user=" 5 "&" ]
+   }
+}​
+
+---------------------------------------------------
+iRules-C2-SD02: Lab: Collect and Display Statistics
+
+Statistics Profile Method
+
+when HTTP_REQUEST {
+    if { [HTTP::uri] eq "/stats" } {
+        HTTP::respond 200 content "<html>
+            <head><title>Statistics Page</title></head>
+            <body><h2>File Extension Counters</h2>
+            <p>JPEG Count: [STATS::get file_type_stats jpg]</p>
+            <p>GIF Count: [STATS::get file_type_stats gif]</p>
+            <p>HTML Count: [STATS::get file_type_stats html]</p>
+            <p>PNG Count: [STATS::get file_type_stats png]</p>
+            <p>CSS Count: [STATS::get file_type_stats css]</p>
+            <p>JS Count: [STATS::get file_type_stats js]</p>
+            <p>CGI Count: [STATS::get file_type_stats cgi]</p>
+            <p>Other Count: [STATS::get file_type_stats other]</p>
+            </body>
+        </html>" "Connection" "close"
+    } elseif { [HTTP::uri] eq "/reset" } {
+        STATS::set file_type_stats jpg 0
+        STATS::set file_type_stats gif 0
+        STATS::set file_type_stats cgi 0
+        STATS::set file_type_stats html 0
+        STATS::set file_type_stats png 0
+        STATS::set file_type_stats css 0
+        STATS::set file_type_stats js 0
+        STATS::set file_type_stats other 0
+        HTTP::respond 200 content "<html>
+            <head><title>Statistics Page</title></head>
+            <body><h2>File Extension Counters</h2>
+            <p><b>Counters successfully reset</b></p>
+            <p>JPEG Count: [STATS::get file_type_stats jpg]</p>
+            <p>GIF Count: [STATS::get file_type_stats gif]</p>
+            <p>HTML Count: [STATS::get file_type_stats html]</p>
+            <p>PNG Count: [STATS::get file_type_stats png]</p>
+            <p>CSS Count: [STATS::get file_type_stats css]</p>
+            <p>JS Count: [STATS::get file_type_stats js]</p>
+            <p>CGI Count: [STATS::get file_type_stats cgi]</p>
+            <p>Other Count: [STATS::get file_type_stats other]</p>
+            </body>
+        </html>" "Connection" "close"
+    } elseif { !([HTTP::uri] ends_with ".ico") } {
+        set ext [string tolower [HTTP::path]]
+        if { $ext ends_with ".jpg" } { STATS::incr file_type_stats jpg }
+        elseif { $ext ends_with ".gif" } { STATS::incr file_type_stats gif }
+        elseif { $ext ends_with ".cgi" } { STATS::incr file_type_stats cgi }
+        elseif { $ext ends_with ".html"} { STATS::incr file_type_stats html }
+        elseif { $ext ends_with ".png" } { STATS::incr file_type_stats png }
+        elseif { $ext ends_with ".css" } { STATS::incr file_type_stats css }
+        elseif { $ext ends_with ".js"  } { STATS::incr file_type_stats js }
+        else                             { STATS::incr file_type_stats other }
+    }
+}​
+
+
+iStats Method
+
+when HTTP_REQUEST {
+   if { [HTTP::uri] eq "/stats" } {
+      HTTP::respond 200 content "<html><head><title>Statistics Page</title></head>
+         <body><h2>File Extension Counters</h2>
+         <p>JPEG Count: [ISTATS::get "ltm.virtual [virtual name] counter jpg"]</p>
+         <p>GIF Count: [ISTATS::get "ltm.virtual [virtual name] counter gif"]</p>
+         <p>HTML Count: [ISTATS::get "ltm.virtual [virtual name] counter html"]</p>
+         <p>PNG Count: [ISTATS::get "ltm.virtual [virtual name] counter png"]</p>
+         <p>CSS Count: [ISTATS::get "ltm.virtual [virtual name] counter css"]</p>
+         <p>JS Count: [ISTATS::get "ltm.virtual [virtual name] counter js"]</p>
+         <p>CGI Count: [ISTATS::get "ltm.virtual [virtual name] counter cgi"]</p>
+         <p>Other Count: [ISTATS::get "ltm.virtual [virtual name] counter other"]</p>
+         </body>
+      </html>" "Connection" "close"
+   } elseif { [HTTP::uri] eq "/reset" } {
+      ISTATS::set "ltm.virtual [virtual name] counter jpg" 0
+      ISTATS::set "ltm.virtual [virtual name] counter gif" 0
+      ISTATS::set "ltm.virtual [virtual name] counter cgi" 0
+      ISTATS::set "ltm.virtual [virtual name] counter html" 0
+      ISTATS::set "ltm.virtual [virtual name] counter png" 0
+      ISTATS::set "ltm.virtual [virtual name] counter css" 0
+      ISTATS::set "ltm.virtual [virtual name] counter js" 0
+      ISTATS::set "ltm.virtual [virtual name] counter png" 0
+      ISTATS::set "ltm.virtual [virtual name] counter other" 0
+      HTTP::respond 200 content "<html>
+         <head><title>Statistics Page</title></head>
+         <body><h2>File Extension Counters</h2>
+         <p><b>Counters successfully reset</b></p>
+         <p>JPEG Count: [ISTATS::get "ltm.virtual [virtual name] counter jpg"]</p>
+         <p>GIF Count: [ISTATS::get "ltm.virtual [virtual name] counter gif"]</p>
+         <p>HTML Count: [ISTATS::get "ltm.virtual [virtual name] counter html"]</p>
+         <p>PNG Count: [ISTATS::get "ltm.virtual [virtual name] counter png"]</p>
+         <p>CSS Count: [ISTATS::get "ltm.virtual [virtual name] counter css"]</p>
+         <p>JS Count: [ISTATS::get "ltm.virtual [virtual name] counter js"]</p>
+         <p>CGI Count: [ISTATS::get "ltm.virtual [virtual name] counter cgi"]</p>
+         <p>Other Count: [ISTATS::get "ltm.virtual [virtual name] counter other"]</p>
+         </body>
+      </html>" "Connection" "close"
+   } elseif { !([HTTP::uri] ends_with ".ico") } {
+      set ext [string tolower [HTTP::path]]
+      if { $ext ends_with ".jpg" } {
+          ISTATS::incr "ltm.virtual [virtual name] counter jpg" 1
+      } elseif { $ext ends_with ".gif" } {
+         ISTATS::incr "ltm.virtual [virtual name] counter gif" 1
+      } elseif { $ext ends_with ".cgi" } {
+         ISTATS::incr "ltm.virtual [virtual name] counter cgi" 1
+      } elseif { $ext ends_with ".html"} {
+         ISTATS::incr "ltm.virtual [virtual name] counter html" 1
+      } elseif { $ext ends_with ".png" } {
+         ISTATS::incr "ltm.virtual [virtual name] counter png" 1
+      } elseif { $ext ends_with ".css" } {
+         ISTATS::incr "ltm.virtual [virtual name] counter css" 1
+      } elseif { $ext ends_with ".js"  } {
+         ISTATS::incr "ltm.virtual [virtual name] counter js" 1
+      } else {
+         ISTATS::incr "ltm.virtual [virtual name] counter other" 1
+      }
+   }
+}​
+
+----------------------------------------------------------------------------------------------
+iRules-C2-SE02: Lab: Intelligently Modify Payload Contents Using a Stream Profile and an iRule
+
+when HTTP_REQUEST {
+    HTTP::header remove "Accept-Encoding"
+    STREAM::disable
+}
+
+when HTTP_RESPONSE {
+    if { [IP::addr [IP::client_addr] equals "10.10.1.0/24"] } {
+        STREAM::expression @askf5.jpg@F5-PNG-Logo.png@
+        STREAM::enable
+    }
+}
+
+-----------------------------------------------------
+iRules-C2-SF02: Lab: Explore Using Arrays in an iRule
+
+Rate limit based on HTTP content type and cumulative content length
+
+when CLIENT_ACCEPTED {
+    # When new connection from client, initialize content type array
+    # and max rate limit length local variables
+    log local0. "New client connection"
+    array set content_type_array { }
+    set max_length 50000
+}
+
+when HTTP_RESPONSE {
+    # When response received on BIG-IP, check to see if content type
+    # already exists in array. If it does, and if max rate limit length
+    # now exceeded, terminate the connection. Otherwise, allow the
+    # response to flow to the client, while incrementing or setting
+    # the cumulative content length in the content type array.
+    set this_content_type [HTTP::header Content-Type]
+    if { [info exists content_type_array($this_content_type)] } {
+        log local0. "Array entry found for content type $this_content_type with current value $content_type_array($this_content_type); checking max"
+        set new_length [expr {$content_type_array($this_content_type) + [HTTP::header Content-Length]}]
+        if { $new_length > $max_length } {
+            log local0. "New length $new_length exceeds max length $max_length for content_type_array($this_content_type); terminating connection"
+            reject
+            return
+        } else
+{           log local0. "Incrementing content type content_type_array($this_content_type) length by [HTTP::header Content-Length]"
+            incr content_type_array($this_content_type) [HTTP::header Content-Length]
+        }
+    } else {
+        set content_type_array($this_content_type) [HTTP::header Content-Length]
+        log local0. "Creating content type [HTTP::header Content-Type] rate and setting to [HTTP::header Content-Length]"
+    }
+}
+
+--------------------------------------------------------------------
+iRules-C2-SG02: Lab: Explore Using iRule Static and Global Variables
+
+Standalone iRule That Initializes a Static Variable
+
+when RULE_INIT {
+    set static::random_counter 0
+    log local0. "Counter variable set to $static::random_counter"
+}
+
+iRule That Changes a Static Variable's Value
+
+when HTTP_REQUEST {
+    if { [HTTP::uri] ne "/env.cgi" } {
+        log local0. "Counter value is currently $static::random_counter"
+    } else {
+        incr static::random_counter
+        log local0. "Incrementing counter value by one to $static::random_counter"
+    }
+}
+
+Standalone iRule That Initializes a Global Variable
+
+when RULE_INIT {
+    set ::random_counter 0
+    log local0. "Counter variable set to $::random_counter"
+}
+
+iRule That Changes a Global Variable's Value
+
+when HTTP_REQUEST {
+    if { [HTTP::uri] ne "/env.cgi" } {
+        log local0. "Counter value is currently $::random_counter"
+    } else {
+        incr ::random_counter
+        log local0. "Incrementing counter value by one to $::random_counter"
+    }
+}
+
+--------------------------------------------------------------------------------
+iRules-C2-SH02: Lab: Explore Using the Session Table to Share Data Across iRules
+
+Use the Session Table
+
+The sample solution below incorporates the challenge requirement to make the visitor counter reflect the number of visitors in the last 5 minutes.
+
+when HTTP_REQUEST {
+    if { [HTTP::path] eq "/" } {
+        # If user requested default page, change request to /lab10.html
+        HTTP::path "/lab10.html"
+    }
+    if { [HTTP::path] eq "/lab10.html" } {
+        # "Counter" provides a means for creating a unique key in the keycount
+         # subtable. It is incremented by 1 each time through this code,
+        # and its timeout is indefinite. It can be reset by request the URI /reset.
+        table incr "counter" 1
+        table timeout "counter" indefinite
+        # Add another entry to the keycount subtable using counter as key. Value is
+        # irrelevant and can be set to anything. Here we are setting to 1.
+        # To test, change "timeout lifetime" parameters from "300 300" to "10 10"
+        table add -subtable "keycount" [table lookup -notouch "counter"] 1 300 300
+    } elseif { [HTTP::path] == "/show" } {
+        # If client requests /show, display the current visitor count without incr.
+        # Visitor count is determined by the number of keys in the keycount subtable.
+        HTTP::respond 200 content "Total Visits in Last 5 Minutes: [table keys -subtable "keycount" -count]"  "Connection" "close"
+    } elseif { [HTTP::path] == "/reset" } {
+        # If client requests /reset, delete all keys from the keycount subtable, and
+        # delete the counter table that provides a unique key.
+        table delete -subtable "keycount" -all
+        table delete "counter"
+        HTTP::respond 200 content "Visitors counter reset" "Connection" "close"
+    }
+}
+when HTTP_RESPONSE {
+    # Replace the incorrect visitor count (#000000) provided by the application with
+    # the number of keys in the keycount subtable. This represents the number
+    # of visitors to lab10.html in the last 5 minutes. The virtual server must have
+    # a stream profile assigned. If content from the application is compressed, the
+    # server must also have an HTML profile assigned.
+    STREAM::expression "@#0000000@[table keys -subtable "keycount" -count]@"
+    STREAM::enable
+}​
+
