@@ -30,22 +30,22 @@ Notes, build scripts, and associated files for the Developing iRules for BIG-IP 
 
 |Number                    |bigip1|bigip2|bigip17|jump|jump2|training server|
 |--------------------------|:----:|:----:|:-----:|:--:|:---:|:-------------:|
-|IRL175-C1A06-SIMPLE       |X     |      |X      |X   |     |X              |
-|**IRL175-C1B05-FLOW**     |X     |      |X      |X   |     |X              |
-|~IRL175-C1B10-LocVars~    |X     |      |X      |X   |     |X              |
-|IRL175-C1C04-SNAT         |X     |      |X      |X   |     |X              |
-|**IRL175-C1D02-SWITCH**   |X     |      |X      |X   |X    |X              |
-|~IRL175-C1D05-DupEvents~  |X     |      |X      |X   |X    |X              |
-|~IRL175-C1D10-Efficiency~ |X     |      |X      |X   |X    |X              |
-|**IRL175-C1E03-PARSE**    |X     |      |X      |X   |     |X              |
-|~IRL175-C1E06-StringParse~|X     |      |X      |X   |     |X              |
-|IRL175-C1F04-HTTP         |X     |      |X      |X   |     |X              |
-|IRL175-C1G03-HTTPS        |X     |      |X      |X   |     |X              |
-|IRL175-C2A02-IFILES       |X     |      |X      |X   |     |X              |
-|IRL175-C2B02-GROUP        |X     |      |X      |X   |     |X              |
-|IRL175-C2C02-PERSIST      |X     |      |X      |X   |     |X              |
-|IRL175-C2D02-STATS        |X     |      |X      |X   |     |X              |
-|IRL175-C2E02-STREAM       |X     |      |X      |X   |X    |X              |
-|IRL175-C2F02-ARRAYS       |X     |      |X      |X   |     |X              |
-|IRL175-C2G02-VAR          |X     |      |X      |X   |     |X              |
-|IRL175-C2H02-TABLE        |X     |      |X      |X   |     |X              |
+|IRL175-C1A06-SIMPLE       |8     |      |8      |4   |     |0.5            |
+|**IRL175-C1B05-FLOW**     |8     |      |8      |4   |     |0.5            |
+|~IRL175-C1B10-LocVars~    |~8~   |      |~8~    |~4~ |     |~0.5~          |
+|IRL175-C1C04-SNAT         |8     |      |8      |4   |     |0.5            |
+|**IRL175-C1D02-SWITCH**   |8     |      |8      |4   |4    |0.5            |
+|~IRL175-C1D05-DupEvents~  |~8~   |      |~8~    |~4~ |~4~  |~0.5~          |
+|~IRL175-C1D10-Efficiency~ |~8~   |      |~8~    |~4~ |~4~  |~0.5~          |
+|**IRL175-C1E03-PARSE**    |8     |      |8      |4   |     |0.5            |
+|~IRL175-C1E06-StringParse~|~8~   |      |~8~    |~4~ |     |~0.5~          |
+|IRL175-C1F04-HTTP         |8     |      |8      |4   |     |0.5            |
+|IRL175-C1G03-HTTPS        |8     |      |8      |4   |     |0.5            |
+|IRL175-C2A02-IFILES       |8     |      |8      |4   |     |0.5            |
+|IRL175-C2B02-GROUP        |8     |      |8      |4   |     |0.5            |
+|IRL175-C2C02-PERSIST      |8     |      |8      |4   |     |0.5            |
+|IRL175-C2D02-STATS        |8     |      |8      |4   |     |0.5            |
+|IRL175-C2E02-STREAM       |8     |      |8      |4   |4    |0.5            |
+|IRL175-C2F02-ARRAYS       |8     |      |8      |4   |     |0.5            |
+|IRL175-C2G02-VAR          |8     |      |8      |4   |     |0.5            |
+|IRL175-C2H02-TABLE        |8     |      |8      |4   |     |0.5            |
