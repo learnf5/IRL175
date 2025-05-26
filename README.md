@@ -2,7 +2,7 @@
 
 Notes, build scripts, and associated files for the Developing iRules for BIG-IP version 17.5 course.
 
-## H2
+## Lab VM RAM (GB)
 
 |Number                    |Name                                               |Duration|Series    |Mgmt|External|Internal|
 |--------------------------|---------------------------------------------------|--------|----------|:--:|:------:|:------:|
@@ -26,5 +26,26 @@ Notes, build scripts, and associated files for the Developing iRules for BIG-IP 
 |IRL175-C2G02-VAR          |Explore Static and Global Variables                |1       |IRL175-260|X   |X       |X       |
 |IRL175-C2H02-TABLE        |Share Data Across iRules with Session Tables       |1       |IRL175-270|X   |X       |X       |
 
-## h2
+## Lab Name, Duration (hr) and VLANs
 
+|Number                    |bigip1|bigip2|bigip17|jump|jump2|training server|
+|--------------------------|:----:|:----:|:-----:|:--:|:---:|:-------------:|
+|IRL175-C1A06-SIMPLE       |X     |      |X      |X   |     |X              |
+|**IRL175-C1B05-FLOW**     |X     |      |X      |X   |     |X              |
+|~IRL175-C1B10-LocVars~    |X     |      |X      |X   |     |X              |
+|IRL175-C1C04-SNAT         |X     |      |X      |X   |     |X              |
+|**IRL175-C1D02-SWITCH**   |X     |      |X      |X   |X    |X              |
+|~IRL175-C1D05-DupEvents~  |X     |      |X      |X   |X    |X              |
+|~IRL175-C1D10-Efficiency~ |X     |      |X      |X   |X    |X              |
+|**IRL175-C1E03-PARSE**    |X     |      |X      |X   |     |X              |
+|~IRL175-C1E06-StringParse~|X     |      |X      |X   |     |X              |
+|IRL175-C1F04-HTTP         |X     |      |X      |X   |     |X              |
+|IRL175-C1G03-HTTPS        |X     |      |X      |X   |     |X              |
+|IRL175-C2A02-IFILES       |X     |      |X      |X   |     |X              |
+|IRL175-C2B02-GROUP        |X     |      |X      |X   |     |X              |
+|IRL175-C2C02-PERSIST      |X     |      |X      |X   |     |X              |
+|IRL175-C2D02-STATS        |X     |      |X      |X   |     |X              |
+|IRL175-C2E02-STREAM       |X     |      |X      |X   |X    |X              |
+|IRL175-C2F02-ARRAYS       |X     |      |X      |X   |     |X              |
+|IRL175-C2G02-VAR          |X     |      |X      |X   |     |X              |
+|IRL175-C2H02-TABLE        |X     |      |X      |X   |     |X              |
