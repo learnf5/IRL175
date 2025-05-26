@@ -22,7 +22,7 @@ Notes, build scripts, and associated files for the Developing iRules for BIG-IP 
 |IRL175-C2C02-PERSIST      |8     |      |8      |4   |     |0.5            |
 |IRL175-C2D02-STATS        |8     |      |8      |4   |     |0.5            |
 |IRL175-C2E02-STREAM       |8     |      |8      |4   |4    |0.5            |
-|IRL175-C2F02-ARRAYS       |8     |      |8      |4   |     |0.5            |
+|IRL175-C2F02-ARRAY        |8     |      |8      |4   |     |0.5            |
 |IRL175-C2G02-VAR          |8     |      |8      |4   |     |0.5            |
 |IRL175-C2H02-TABLE        |8     |      |8      |4   |     |0.5            |
 
@@ -46,6 +46,6 @@ Notes, build scripts, and associated files for the Developing iRules for BIG-IP 
 |IRL175-C2C02-PERSIST      |Deploy Universal Persistence with iRules           |1       |IRL175-220|X   |X       |X       |
 |IRL175-C2D02-STATS        |Collect and Display Statistics                     |1       |IRL175-230|X   |X       |X       |
 |IRL175-C2E02-STREAM       |Modify Payload Using Stream Profile and iRules     |1       |IRL175-240|X   |X       |X       |
-|IRL175-C2F02-ARRAYS       |Explore Using Arrays in iRules                     |1       |IRL175-250|X   |X       |X       |
+|IRL175-C2F02-ARRAY        |Explore Using Arrays in iRules                     |1       |IRL175-250|X   |X       |X       |
 |IRL175-C2G02-VAR          |Explore Static and Global Variables                |1       |IRL175-260|X   |X       |X       |
 |IRL175-C2H02-TABLE        |Share Data Across iRules with Session Tables       |1       |IRL175-270|X   |X       |X       |
