@@ -8,4 +8,4 @@ Specifically in this lab, the following commands will work correctly:
 - Pressing the **F5** (function(fn) and 5 keys / fn+5 keys) will perform a refresh.
 - Pressing **Shift+F5** (Shift+fn+5) will perform a hard-refresh.
 
->[!alert] Using familar keyboard browser refresh commands will cause the browser window displaying the lab environment to refresh.  Remember, refresh and hard-refresh commands require different keyboard commands to issue the browser hard-refresh to the browser on the Student Workstation *inside* the lab environment.
+>[!alert] Using familar keyboard browser refresh commands, like Ctrl+Shift+R, will cause the browser window displaying the lab environment to refresh.  Remember, refresh and hard-refresh commands require different keyboard commands to issue the browser hard-refresh to the browser on the Student Workstation *inside* the lab environment.
