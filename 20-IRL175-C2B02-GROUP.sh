@@ -1,12 +1,3 @@
-# get the lab and course identifiers
-profile_id=@lab.LabProfile.Id
-set +x
-export LAB_ID=$(curl --silent "https://labondemand.com/api/v3/labprofile?id=$profile_id" --header "api_key: $APIKEY" | jq --raw-output .Number)
-echo LAB_ID=\$\(curl --silent "https://labondemand.com/api/v3/labprofile?id=$profile_id" --header "api_key: xxxxxxxxxxxxxxxxxxxxxxx" \| jq --raw-output .Number\)
-echo $LAB_ID
-set -x
-export COURSE_ID=$(echo ${LAB_ID%%-*} | tr A-Z a-z)
-
 #download file updates for TrainingServer3.7 from Github
     curl --silent https://raw.githubusercontent.com/learnf5/ts/main/browserspecific.html.edge --output /tmp/browserspecific.html
     curl --silent https://raw.githubusercontent.com/learnf5/ts/main/edge.png --output /tmp/edge.png
