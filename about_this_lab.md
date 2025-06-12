@@ -16,7 +16,19 @@
 
 <!-- Local copy of Lab Topo diagram !IMAGE[IRL175_lab_topology.png](instructions296326/IRL175_lab_topology.png)-->
 
-!IMAGE[IRL175_lab_topology.png](https://github.com/learnf5/IRL175/blob/main/image/IRL175_lab_topology.png?raw=true "iRules Lab Topology"){600}
+!IMAGE[IRL175_lab_topology.png](https://github.com/learnf5/IRL175/blob/main/image/IRL175_lab_topology.png?raw=true "iRules Lab Topology"){400}
+*click to enlarge*
+
+##Connect to BIGIP1
+
+1. Sign in to the Student Workstation and located the Favorites icons for **Browsers**, **Terminal**, and **File Explorer** as shown in the image below.
+
+	!IMAGE[IRL175_jump_desktop.png](https://github.com/learnf5/IRL175/blob/main/image/IRL175_jump_desktop.png?raw=true){200}
+    *click to enlarge*
+ 
+1. If using the Configuration utility, open a browser window or tab and connect to BIGIP1 at `https://192.168.1.31`, log in using username `admin` and password `f5trn001`.
+
+1. If using TMSH, open an SSH session to BIGIP1 at `ssh root@192.168.1.31`, login using the password `f5trn001`.
 
 ##Preconfigured Local Traffic Objects on BIGIP1
 
