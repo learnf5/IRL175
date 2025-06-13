@@ -59,3 +59,7 @@ BIGIP1 is already configured with many of the local traffic objects needed to co
 > 1. Run the script `./iRules_v17.5_ClassSetup.sh`
 >
 > After running the lab preparation script, the following Virtual Servers and Pools will be created.
+
+---
+
+##Click **Next** to Continue
