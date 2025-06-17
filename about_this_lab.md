@@ -44,7 +44,7 @@ BIGIP1 is already configured with many of the local traffic objects needed to co
 <!--!IMAGE[IRL175_BIGIP1_Pools.png](instructions296326/IRL175_BIGIP1_Pools.png)-->
 !IMAGE[IRL175_BIGIP1_Pools.png](https://github.com/learnf5/IRL175/blob/main/image/IRL175_BIGIP1_Pools.png?raw=true "iRules List of Pools pre-configured"){600}
 
-> [+alert] If the Local Traffic Objects are missing, run these steps.**
+> [+alert] If the Local Traffic Objects are missing, run these steps.
 >
 > If the objects below have NOT been created, run the following steps.
 >
