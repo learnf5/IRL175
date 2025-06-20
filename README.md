@@ -34,7 +34,7 @@ Notes, build scripts, and associated files for the Developing iRules for BIG-IP 
 |**IRL175-C1B05-FLOW**     |**Observe Connection Flow and Context**            |1       |IRL175-110|X   |X       |X       |
 |~IRL-C1B10-LocVars~       |~Work with Local Variables and Conditional Logic~  |~1~     |~*none*~  |~X~ |~X~     |~X~     |
 |IRL175-C1C04-SNAT         |Implement Intelligent Load Balancing and SNAT      |1       |IRL175-120|X   |X       |X       |
-|**IRL175-C1D02-SWITCH**   |**Measure IF and SWITCH Efficiency**               |1       |IRL175-130|X   |X       |X       |
+|**IRL175-C1D02-SWITCH**   |**Measure IF and SWITCH Efficiency**               |2       |IRL175-130|X   |X       |X       |
 |~IRL-C1D05-DupEvents~     |~Manage Duplicate Events in iRules~                |~1~     |~*none*~  |~X~ |~X~     |~X~     |
 |~IRL-C1D10-Efficiency~    |~Measure iRule Efficiency When Logging and Looping~|~1~     |~*none*~  |~X~ |~X~     |~X~     |
 |**IRL175-C1E03-PARSE**    |**Use iRules to Parse Payload Data**               |1       |IRL175-140|X   |X       |X       |
